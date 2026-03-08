@@ -7,7 +7,7 @@ import machine
 import time
 
 # 配置CPU频率
-machine.freq(240000000)  # 240MHz
+machine.freq(160000000)  # 160MHz
 
 # 设置WiFi（可选）
 # import network
@@ -15,4 +15,4 @@ machine.freq(240000000)  # 240MHz
 # wlan.active(True)
 
 print("ESP32 启动完成")
-print(f"CPU频率: {machine.freq()} Hz")
+print(f"CPU频率: {machine.freq()/1000000} MHz")
