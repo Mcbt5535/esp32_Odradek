@@ -1,0 +1,40 @@
+# MicroPython
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.so
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.mpy
+*.hex
+*.bin
+build/
+dist/
+
+# Environment
+.env
+.venv/
+venv/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
