@@ -37,6 +37,19 @@ jobs:
       run: |
         echo "Current version: ${{ steps.version.outputs.version }}"
 
+    - name: Commit and push VERSION file if changed
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add VERSION
+        if git status --porcelain | grep -q "VERSION"; then
+          git commit -m "Auto update version to ${{ steps.version.outputs.version }} [skip ci]"
+          git push
+          echo "VERSION file updated and pushed"
+        else
+          echo "VERSION file unchanged, no commit needed"
+        fi
+
     - name: Create tag if needed
       if: contains(github.event.head_commit.message, '[major]') || contains(github.event.head_commit.message, '[minor]')
       run: |
