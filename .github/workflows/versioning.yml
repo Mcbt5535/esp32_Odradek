@@ -1,0 +1,46 @@
+name: Auto Versioning
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # 获取所有提交历史以计算提交数
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Calculate version
+      run: |
+        python tools/version_manager.py
+
+    - name: Get version from file
+      id: version
+      run: |
+        VERSION=$(cat VERSION)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Display version
+      run: |
+        echo "Current version: ${{ steps.version.outputs.version }}"
+
+    - name: Create tag if needed
+      if: contains(github.event.head_commit.message, '[major]') || contains(github.event.head_commit.message, '[minor]')
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag -a "v${{ steps.version.outputs.version }}" -m "Release version ${{ steps.version.outputs.version }}"
+        git push origin --tags

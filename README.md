@@ -13,8 +13,18 @@ esp32_project/
 │   └── bluetooth/ # 蓝牙通讯模块
 ├── drivers/       # 硬件驱动
 ├── config/        # 配置文件
+├── tools/         # 工具脚本
 └── README.md
 ```
+
+## 版本管理
+
+本项目使用自动版本管理系统，在CI流程中自动计算版本号。版本号格式为 `x.x.x`：
+- 主版本号：当commit消息包含 `[major]` 时递增
+- 次版本号：当commit消息包含 `[minor]` 时递增  
+- 修复版本号：距离上一个tag的commit数
+
+版本管理脚本位于 `tools/version_manager.py`
 
 ## 模块说明
 
