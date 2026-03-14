@@ -38,10 +38,10 @@ jobs:
         echo "Current version: ${{ steps.version.outputs.version }}"
 
     - name: Commit and push VERSION file if changed
+      if: github.event_name == 'push'  # Only run on push events
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git checkout ${{ github.ref_name }}
         git add VERSION
         if git status --porcelain | grep -q "VERSION"; then
           git commit -m "Auto update version to ${{ steps.version.outputs.version }} [skip ci]"
@@ -52,7 +52,7 @@ jobs:
         fi
 
     - name: Create tag if needed
-      if: contains(github.event.head_commit.message, '[major]') || contains(github.event.head_commit.message, '[minor]')
+      if: github.event_name == 'push' && (contains(github.event.head_commit.message, '[major]') || contains(github.event.head_commit.message, '[minor]'))
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
