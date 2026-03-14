@@ -151,19 +151,19 @@ if __name__ == "__main__":
         time.sleep_ms(200)
 
 
-import os
+# import os
 
-# 获取根目录下的所有条目（文件和文件夹）
-items = os.listdir('/')
+# # 获取根目录下的所有条目（文件和文件夹）
+# items = os.listdir('/')
 
-for item in items:
-    try:
-        # 尝试删除条目（如果是文件则会成功）
-        os.remove('/' + item)
-        print(f"已删除文件: {item}")
-    except OSError:
-        # 如果是目录，os.remove() 会抛出异常，我们打印提示信息并跳过
-        print(f"跳过目录: {item}，请手动处理或使用其他方法")
+# for item in items:
+#     try:
+#         # 尝试删除条目（如果是文件则会成功）
+#         os.remove('/' + item)
+#         print(f"已删除文件: {item}")
+#     except OSError:
+#         # 如果是目录，os.remove() 会抛出异常，我们打印提示信息并跳过
+#         print(f"跳过目录: {item}，请手动处理或使用其他方法")
 
-# 最后，列出剩余内容以确认
-print("剩余条目:", os.listdir('/'))
+# # 最后，列出剩余内容以确认
+# print("剩余条目:", os.listdir('/'))
