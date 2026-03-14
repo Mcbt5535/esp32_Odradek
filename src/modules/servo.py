@@ -3,10 +3,17 @@ from lib.pca9685 import PCA9685
 from micropython import const
 import uasyncio as asyncio
 
+DEBUG_MODE = False
+
+
+def debug_print(msg):
+    if DEBUG_MODE:
+        print(msg)
+
 
 class Servo(Module):
 
-    ID = 1
+    ID = const(1)
 
     CMD_SET_ANGLE = const(1)
     CMD_OPEN = const(2)  # open
@@ -15,10 +22,12 @@ class Servo(Module):
 
     def __init__(self, i2c):
         self.pwm = PCA9685(i2c)
+        print("[Servo] Servo init")
         self.current_cmd = None  # 当前指令
         self.current_data = None  # 指令参数
         # 启动后台循环任务
         self.task = asyncio.create_task(self.run_loop())
+        print("[Servo] run loop started")
 
     def handle(self, cmd, data=None):
         """接收蓝牙指令，更新当前动作和参数"""
@@ -41,26 +50,32 @@ class Servo(Module):
     async def run_loop(self):
         """后台循环任务，持续执行当前动作"""
         while True:
+            debug_print("[Servo] run_loop")
             cmd = self.current_cmd
             data = self.current_data
 
-            if cmd == self.CMD_SET_ANGLE and data:
+            if cmd == self.CMD_SET_ANGLE and data is not None:
                 ch = data[0]
                 angle = data[1]
+                debug_print(f"set_angle ch:{ch}, angle:{angle}")
                 self.pwm.set_servo_angle(ch, angle)
                 await asyncio.sleep_ms(50)
 
             elif cmd == self.CMD_OPEN:
+                debug_print("mode_open")
                 await self.mode_open()
 
             elif cmd == self.CMD_CLOSE:
+                debug_print("mode_close")
                 await self.mode_close()
 
             elif cmd == self.CMD_WORK:
+                debug_print("mode_work")
                 await self.mode_work()
 
             else:
-                await asyncio.sleep_ms(50)  # 空闲等待
+                debug_print("unknown cmd")
+                await asyncio.sleep_ms(1000)  # 空闲等待
 
     # ---------------------
     # 动作模式
@@ -69,12 +84,12 @@ class Servo(Module):
     async def mode_open(self):
         self.pwm.set_servo_angle(0, 180)
         self.pwm.set_servo_angle(15, 180)
-        await asyncio.sleep_ms(50) 
+        await asyncio.sleep_ms(50)
 
     async def mode_close(self):
         self.pwm.set_servo_angle(0, 0)
         self.pwm.set_servo_angle(15, 0)
-        await asyncio.sleep_ms(50) 
+        await asyncio.sleep_ms(50)
 
     async def mode_work(self, delay_ms=200):
         if delay_ms < 200:
