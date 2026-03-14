@@ -41,10 +41,11 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
+        git checkout ${{ github.ref_name }}
         git add VERSION
         if git status --porcelain | grep -q "VERSION"; then
           git commit -m "Auto update version to ${{ steps.version.outputs.version }} [skip ci]"
-          git push
+          git push origin ${{ github.ref_name }}
           echo "VERSION file updated and pushed"
         else
           echo "VERSION file unchanged, no commit needed"
