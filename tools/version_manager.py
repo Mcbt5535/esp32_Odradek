@@ -105,8 +105,8 @@ def calculate_version():
     # 获取自最新标签以来的提交数
     commits_count = get_commits_since_tag(latest_tag)
 
-    # 获取最新提交信息
-    latest_commit = get_latest_commit()
+    # 获取自最新标签以来的所有提交信息（改为检查所有提交，而不仅仅是最新一个）
+    commit_messages = get_commit_messages_since_tag(latest_tag)
 
     # 解析当前版本
     if latest_tag and latest_tag.startswith("v"):
@@ -120,13 +120,16 @@ def calculate_version():
         # 没有标签，从0.0.0开始
         major, minor, patch = 0, 0, 0
 
-    # 检查最新提交信息，决定是否更新主版本或次版本
-    if "[major]" in latest_commit.lower():
+    # 检查所有提交信息（按优先级），决定是否更新主版本或次版本
+    has_major = any("[major]" in msg.lower() for msg in commit_messages)
+    has_minor = any("[minor]" in msg.lower() for msg in commit_messages)
+
+    if has_major:
         # 更新主版本，重置次版本和修复版本
         major += 1
         minor = 0
         patch = 0
-    elif "[minor]" in latest_commit.lower():
+    elif has_minor:
         # 更新次版本，重置修复版本
         minor += 1
         patch = 0
@@ -167,8 +170,11 @@ def main():
         print(version)
 
         # 如果是主版本或次版本更新，创建标签
-        latest_commit = get_latest_commit()
-        if "[major]" in latest_commit.lower() or "[minor]" in latest_commit.lower():
+        commit_messages = get_commit_messages_since_tag(None)
+        has_major = any("[major]" in msg.lower() for msg in commit_messages)
+        has_minor = any("[minor]" in msg.lower() for msg in commit_messages)
+
+        if has_major or has_minor:
             create_tag(version)
 
         # 同时写入VERSION文件
