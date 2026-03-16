@@ -19,6 +19,7 @@ class Servo(Module):
     CMD_OPEN = const(2)  # open
     CMD_CLOSE = const(3)  # close
     CMD_WORK = const(4)  # work
+    CMD_WARN = const(5)  # warning
 
     def __init__(self, i2c):
         self.pwm = PCA9685(i2c)
@@ -73,6 +74,10 @@ class Servo(Module):
                 debug_print("mode_work")
                 await self.mode_work()
 
+            elif cmd == self.CMD_WARN:
+                debug_print("mode_warn")
+                await self.mode_warn()
+
             else:
                 debug_print("unknown cmd")
                 await asyncio.sleep_ms(1000)  # 空闲等待
@@ -80,16 +85,34 @@ class Servo(Module):
     # ---------------------
     # 动作模式
     # ---------------------
+    def control_servos(self, angle):
+        servos = [0, 4, 8, 12]
+        for i in servos:
+            self.pwm.set_servo_angle(i, angle)
 
     async def mode_open(self):
-        self.pwm.set_servo_angle(0, 180)
-        self.pwm.set_servo_angle(15, 180)
+        self.control_servos(180)
         await asyncio.sleep_ms(50)
 
     async def mode_close(self):
-        self.pwm.set_servo_angle(0, 0)
-        self.pwm.set_servo_angle(15, 0)
+        self.control_servos(0)
         await asyncio.sleep_ms(50)
+
+    async def step_move(self, start_angle, end_angle, event, step_delay_ms=100):
+        step = 2  # 每次移动2度
+        if start_angle < end_angle:
+            angles = range(start_angle, end_angle + 1, step)
+        else:
+            angles = range(start_angle, end_angle - 1, -step)
+
+        len_angles = len(angles)
+        delay_per_step = max(40, step_delay_ms // len_angles)  # 每步至少40ms
+
+        for angle in angles:
+            self.control_servos(angle)
+            if not await self.sleep_ms_intr(delay_per_step, event):
+                return False  # 动作被打断
+        return True  # 动作完成
 
     async def mode_work(self, delay_ms=200):
         if delay_ms < 200:
@@ -97,11 +120,22 @@ class Servo(Module):
         elif delay_ms > 2000:
             delay_ms = 2000
 
-        self.pwm.set_servo_angle(0, 90)
-        self.pwm.set_servo_angle(15, 90)
+        self.control_servos(90)
         if not await self.sleep_ms_intr(delay_ms, self.CMD_WORK):
             return
 
-        self.pwm.set_servo_angle(0, 180)
-        self.pwm.set_servo_angle(15, 180)
+        self.control_servos(180)
         await self.sleep_ms_intr(delay_ms, self.CMD_WORK)
+
+    async def mode_warn(self, delay_ms=1200):
+        # TO DO 增加pid
+        if delay_ms < 800:
+            delay_ms = 800
+        elif delay_ms > 2000:
+            delay_ms = 2000
+
+        # 匀速移动
+        if not await self.step_move(55, 95, self.CMD_WARN, int(delay_ms / 2)):
+            return
+        if not await self.step_move(95, 55, self.CMD_WARN, int(delay_ms / 2)):
+            return

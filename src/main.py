@@ -4,6 +4,7 @@ import time
 from lib.ble import BLE
 
 from modules.servo import Servo
+from modules.motor import Motor
 import uasyncio as asyncio
 
 
@@ -23,9 +24,13 @@ def parse_hex_string(hex_str):
     # 将每个部分转换为整数（自动识别十六进制）
     result = []
     for part in parts:
-        # 使用int()转换，base=0表示自动识别进制（0x前缀会按十六进制处理）
-        result.append(int(part, 16))
-
+        try:
+            # 使用int()转换，base=0表示自动识别进制（0x前缀会按十六进制处理）
+            result.append(int(part, 16))
+        except ValueError:
+            # 如果转换失败，则返回原始字符串
+            print(f"Input error: {part}")
+            result = [-1]
     return result
 
 
@@ -42,6 +47,8 @@ class Device:
         # 注册模块
         self.register(Servo(i2c_servo))
         print(f"servo init, now modules:{self.modules}")
+        self.register(Motor())
+        print(f"motor init, now modules:{self.modules}")
 
         # BLE
         self.ble = BLE(name="BB-ESP32", callback=self.on_ble)
@@ -56,6 +63,9 @@ class Device:
 
         print("recv:", data)
         data = parse_hex_string(data)
+        if data == [-1]:
+            return
+
         print(f"data:{data},type:{type(data)},len:{len(data)}")
         if len(data) < 2:
             return
